@@ -1,0 +1,2 @@
+
+For detect objects in TensorFlow we have ability to program an external memory that contains all the necessary features to recognize things. This memory automatically activates once it is confirmed and a connection is established between the memory and the robot. Since the robot has a camera and sensors, it becomes easy for the robot to clearly recognize things based on what it sees. The presence of a vast library with millions of stored items further simplifies the robot's ability to recognize things easily.
