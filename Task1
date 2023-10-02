@@ -1,0 +1,79 @@
+<?php
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "robot";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+// Check connection
+if ($conn->connect_error) {
+  die("Connection failed: " . $conn->connect_error);
+}
+
+$sql = "SELECT * FROM directions ORDER BY id DESC LIMIT 1";
+$result = $conn->query ($sql);
+
+if ($result->num_rows > 0) {
+  // output data of each row
+  while($row = $result->fetch_assoc()) {
+    echo $row["directions"];
+  }
+} else {
+  echo "0 results";
+}
+$conn->close();
+?>
+
+
+--------------------------------------------------------------------------
+
+
+<!DOCTYPE html>
+<html>
+
+ <body>
+
+<h1>Robot Control</h1>
+
+<button type="button" onclick="Function1()">Backword</button>
+<button type="button" onclick= "Function2()">Forward</button>
+<button type="button" onclick="Function3()">Lift</button>
+<button type="button" onclick= "Function4()">Right</button>
+<button type="button" onclick="Function()">Stop</button>
+
+
+  <script>
+
+function Function1() {
+  const xhttp = new XMLHttpRequest();
+  xhttp.open("GET", "http://localhost/r/test.php?x="  + "Backword");
+  xhttp.send();
+}
+function Function2() {
+  const xhttp = new XMLHttpRequest();
+  xhttp.open("GET", "http://localhost/r/test.php?x=" + "Forward");
+  xhttp.send();
+}
+function Function3() {
+  const xhttp = new XMLHttpRequest();
+  xhttp.open("GET", "http://localhost/r/test.php?x=" + "Lift");
+  xhttp.send();
+}
+function Function4() {
+  const xhttp = new XMLHttpRequest();
+  xhttp.open("GET", "http://localhost/r/test.php?x=" + "Right");
+  xhttp.send();
+}
+function Function() {
+  const xhttp = new XMLHttpRequest();
+  xhttp.open("GET", "http://localhost/r/test.php?=" + "Stop");
+  xhttp.send();
+}
+
+
+  </script>
+ </body>
+
+
+</html>
