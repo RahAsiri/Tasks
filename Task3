@@ -1,0 +1,84 @@
+
+<?php
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "js";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+  die("Connection failed: " . $conn->connect_error);
+}
+$sql = "SELECT * FROM speech-to-text ORDER BY id DESC LIMIT 1";
+$result = $conn->query ($sql);
+
+if ($result->num_rows > 0) {
+  // output data of each row
+  while($row = $result->fetch_assoc()) {
+    echo $row["speech-to-text"];
+  }
+} else {
+  echo "0 results";
+}
+$conn->close();
+?>
+
+
+--------------------------------------------------------------------------
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Continuous Speech-to-Text</title>
+</head>
+<body>
+    <h1>JavaScript Speech-to-Text</h1>
+    <p>This page will continuously transcribe speech..
+	   The microphone will restart every 5 seconds if no speech is detected.</p>
+    <div id="transcript"></div>
+
+    <script>
+        const transcriptDiv = document.getElementById('transcript');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+
+        recognition.continuous = true;
+
+        recognition.onstart = () => {
+            console.log('Speech recognition started');
+            transcriptDiv.textContent = 'Listening...';
+        };
+
+        recognition.onresult = (event) => {
+            const result = event.results[event.results.length - 1][0].transcript;
+            transcriptDiv.textContent = result;
+		
+             const xhttp = new XMLHttpRequest();
+             xhttp.open("GET", "http://localhost/r/JS.php?route="  + result);
+             xhttp.send();
+
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+        };
+
+        // Start recognition when the page loads
+        recognition.start();
+
+        // Restart recognition every 5 seconds if no speech is detected
+        setInterval(() => {
+            if (!recognition.listening) {
+                console.log('Restarting speech recognition...');
+                recognition.start();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
