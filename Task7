@@ -1,0 +1,88 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Speech</title>
+</head>
+<body>
+    <textarea id="inputText" placeholder="Enter text..."></textarea>
+    <button onclick="convertAndSave()">Convert and Save</button>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+// Check browser support for the SpeechSynthesis API
+if ('speechSynthesis' in window) {
+    var synth = window.speechSynthesis;
+
+    function convertAndSave() {
+        // Get the text from the textarea
+        var text = document.getElementById('inputText').value;
+
+        // Create a SpeechSynthesisUtterance object
+        var utterance = new SpeechSynthesisUtterance(text);
+
+        // Speech synthesis configuration (optional)
+        utterance.rate = 1; // Speed of speech
+
+        // Speak the text
+        synth.speak(utterance);
+
+        // Send the text to the server for saving
+        saveTextToDatabase(text);
+    }
+
+    function saveTextToDatabase(text) {
+        // Send an AJAX request to the server
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'save.php', true);
+        xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+        // Prepare the data to send
+        var data = 'text=' + encodeURIComponent(text);
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                console.log(xhr.responseText);
+            }
+        };
+
+        // Send the request
+        xhr.send(data);
+    }
+} else {
+    alert('Speech synthesis not supported in your browser. Please use a different browser.');
+}
+
+
+<?php
+// Database connection
+$servername = "your_server_name";
+$username = "your_username";
+$password = "your_password";
+$dbname = "your_database_name";
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Get the text from the POST request
+$text = $_POST['text'];
+
+// Insert the text into the database
+$sql = "INSERT INTO your_table_name (text_column) VALUES ('$text')";
+
+if ($conn->query($sql) === TRUE) {
+    echo "Text saved successfully!";
+} else {
+    echo "Error: " . $sql . "<br>" . $conn->error;
+}
+
+$conn->close();
+?>
