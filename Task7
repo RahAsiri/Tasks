@@ -1,88 +1,70 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text to Speech</title>
-</head>
-<body>
-    <textarea id="inputText" placeholder="Enter text..."></textarea>
-    <button onclick="convertAndSave()">Convert and Save</button>
+pip install gtts pydub
 
-    <script src="script.js"></script>
-</body>
-</html>
+from gtts import gTTS
+from pydub import AudioSegment
+import sqlite3
+import os
 
-// Check browser support for the SpeechSynthesis API
-if ('speechSynthesis' in window) {
-    var synth = window.speechSynthesis;
+def text_to_speech_with_sound(text, background_sound_path, language='en', save_as_file='output.mp3'):
+    """
+    Convert text to speech, add background sound, and save the result.
 
-    function convertAndSave() {
-        // Get the text from the textarea
-        var text = document.getElementById('inputText').value;
+    Parameters:
+    - text (str): The text you want to convert to speech.
+    - background_sound_path (str): Path to the background sound file.
+    - language (str): The language in which you want the text to be spoken. Default is 'en' (English).
+    - save_as_file (str): The filename to save the audio as. Default is 'output.mp3'.
+    """
+    # Convert text to speech
+    tts = gTTS(text=text, lang=language, slow=False)
+    tts.save(save_as_file)
 
-        // Create a SpeechSynthesisUtterance object
-        var utterance = new SpeechSynthesisUtterance(text);
+    # Load audio files
+    text_audio = AudioSegment.from_mp3(save_as_file)
+    background_sound = AudioSegment.from_file(background_sound_path)
 
-        // Speech synthesis configuration (optional)
-        utterance.rate = 1; // Speed of speech
+    # Overlay text audio on background sound
+    combined_audio = background_sound.overlay(text_audio)
 
-        // Speak the text
-        synth.speak(utterance);
+    # Save the combined audio
+    combined_audio.export(save_as_file, format="mp3")
 
-        // Send the text to the server for saving
-        saveTextToDatabase(text);
-    }
+def save_to_database(text, audio_file_path, database_path='speech_data.db'):
+    """
+    Save text and audio file path to a database.
 
-    function saveTextToDatabase(text) {
-        // Send an AJAX request to the server
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', 'save.php', true);
-        xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    Parameters:
+    - text (str): The original text.
+    - audio_file_path (str): The path to the audio file.
+    - database_path (str): Path to the SQLite database file. Default is 'speech_data.db'.
+    """
+    # Connect to the database
+    connection = sqlite3.connect(database_path)
+    cursor = connection.cursor()
 
-        // Prepare the data to send
-        var data = 'text=' + encodeURIComponent(text);
+    # Create a table if it doesn't exist
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS speech_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            text TEXT,
+            audio_path TEXT
+        )
+    ''')
 
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                console.log(xhr.responseText);
-            }
-        };
+    # Insert data into the table
+    cursor.execute('INSERT INTO speech_data (text, audio_path) VALUES (?, ?)', (text, audio_file_path))
 
-        // Send the request
-        xhr.send(data);
-    }
-} else {
-    alert('Speech synthesis not supported in your browser. Please use a different browser.');
-}
+    # Commit changes and close the connection
+    connection.commit()
+    connection.close()
 
+if __name__ == "__main__":
+    input_text = "Hello, this is a test. I hope this text-to-speech example works well."
+    background_sound_path = "background_sound.mp3"  # Replace with the path to your background sound file
 
-<?php
-// Database connection
-$servername = "your_server_name";
-$username = "your_username";
-$password = "your_password";
-$dbname = "your_database_name";
+    output_audio_path = 'output_with_sound.mp3'
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+    text_to_speech_with_sound(input_text, background_sound_path, save_as_file=output_audio_path)
+    save_to_database(input_text, output_audio_path)
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-// Get the text from the POST request
-$text = $_POST['text'];
-
-// Insert the text into the database
-$sql = "INSERT INTO your_table_name (text_column) VALUES ('$text')";
-
-if ($conn->query($sql) === TRUE) {
-    echo "Text saved successfully!";
-} else {
-    echo "Error: " . $sql . "<br>" . $conn->error;
-}
-
-$conn->close();
-?>
